@@ -1,0 +1,103 @@
+#!/bin/bash
+# collect.sh.template - 菜品收集脚本（构建模板）
+# 此模板由 build.js 处理，生成自包含的 collect.sh
+
+DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# 将内联 JavaScript 写入临时文件并执行（避免 bash 变量替换问题）
+TMP_SCRIPT=$(mktemp)
+trap "rm -f $TMP_SCRIPT" EXIT
+
+cat > "$TMP_SCRIPT" << 'JAVASCRIPT_EOF'
+// ==== 内联 data-accessor.js ====
+{{ DATA_ACCESSOR }}
+
+// ==== 内联 seed.js ====
+{{ SEED }}
+
+// ==== 内联 dishes.js ====
+{{ DISHES }}
+
+// ==== 内联 autoGenerate.js ====
+{{ AUTOGENERATE }}
+
+// ==== collect.sh 逻辑 ====
+const command = process.argv[2];
+
+switch (command) {
+  case 'add': {
+    const name = process.argv[3];
+    const opts = parseArgs(process.argv.slice(4));
+    const dish = {
+      name: name || '未命名菜品',
+      category: opts.category || '其他',
+      tags: opts.tags ? opts.tags.split(',') : [],
+      ingredients: opts.ingredients ? opts.ingredients.split(',') : [],
+      prepTime: opts.prepTime ? parseInt(opts.prepTime) : 30,
+      difficulty: opts.difficulty || '简单',
+    };
+    const result = addDish(dish);
+    console.log(result.ok ? `✅ 已添加「${result.dish.name}」到待确认列表` : `❌ ${result.error}`);
+    break;
+  }
+  case 'list-pending': {
+    const pending = getPending();
+    console.log(formatPending(pending));
+    break;
+  }
+  case 'confirm': {
+    const target = process.argv[3];
+    const result = confirmPending(target);
+    if (result.ok) {
+      const msg = result.message || `已确认「${result.dish.name}」→ 加入菜品库`;
+      console.log(`✅ ${msg}`);
+    } else {
+      console.log(`❌ ${result.error}`);
+    }
+    break;
+  }
+  case 'reject': {
+    const target = process.argv[3];
+    const result = rejectPending(target);
+    if (result.ok) {
+      const msg = result.message || `已拒绝「${result.dish.name}」`;
+      console.log(`✅ ${msg}`);
+    } else {
+      console.log(`❌ ${result.error}`);
+    }
+    break;
+  }
+  case 'confirm-all': {
+    const result = confirmAll();
+    console.log(result.ok ? `✅ ${result.message}` : `❌ ${result.error}`);
+    break;
+  }
+  case 'reject-all': {
+    const result = rejectAll();
+    console.log(result.ok ? `✅ ${result.message}` : `❌ ${result.error}`);
+    break;
+  }
+  case 'auto-generate': {
+    const count = parseInt(process.argv[3]) || 3;
+    const result = autoGenerate(count);
+    console.log(JSON.stringify(result, null, 2));
+    break;
+  }
+  default:
+    console.log('Usage: collect.sh {add|list-pending|confirm|reject|confirm-all|reject-all|auto-generate}');
+}
+
+function parseArgs(args) {
+  const result = {};
+  for (let i = 0; i < args.length; i++) {
+    if (args[i].startsWith('--')) {
+      const key = args[i].slice(2);
+      result[key] = args[i + 1] !== undefined ? args[i + 1] : true;
+      if (args[i + 1] !== undefined) i++;
+    }
+  }
+  return result;
+}
+JAVASCRIPT_EOF
+
+node "$TMP_SCRIPT" "$@"

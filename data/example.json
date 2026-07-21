@@ -1,0 +1,5 @@
+{
+  "dishes": [],
+  "pending": [],
+  "note": "这是示例数据文件。首次使用时，请将此文件复制为 dishes.json，或使用 collect 命令添加菜品。"
+}

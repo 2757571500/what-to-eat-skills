@@ -27,16 +27,19 @@ version: "1.0.0"
    - 子 skill 执行完成后，返回结果给用户
    - 如果需要进一步操作，继续流转
 
+4. **按需加载文档**（如需要详细操作步骤）
+   - 读取 `docs/<意图>.md` 获取完整 CLI 命令和示例
+
 ## 1. 意图识别
 
 分析用户输入，根据关键词和语义判断意图类型：
 
 | 意图类型 | 触发关键词 | 分发目标 |
 |---------|-----------|---------|
-| **菜品收集** | 加、录入、添加、生成、创建、待确认、确认、拒绝 | `what-to-eat-collect` |
-| **菜品推荐** | 推荐、随机、筛选、吃什么、随便、来一个、统计 | `what-to-eat-recommend` |
-| **日常管理** | 吃了、记录、吃过、删除、去掉、移除 | `what-to-eat-manage` |
-| **可视化** | 打开、看看、网页、浏览器、可视化、展示、界面 | `what-to-eat-visualize` |
+| **菜品收集** | 加、录入、添加、生成、创建、待确认、确认、拒绝 | `what-to-eat-collect` ([docs/collect.md](docs/collect.md)) |
+| **菜品推荐** | 推荐、随机、筛选、吃什么、随便、来一个、统计 | `what-to-eat-recommend` ([docs/recommend.md](docs/recommend.md)) |
+| **日常管理** | 吃了、记录、吃过、删除、去掉、移除 | `what-to-eat-manage` ([docs/manage.md](docs/manage.md)) |
+| **可视化** | 打开、看看、网页、浏览器、可视化、展示、界面 | `what-to-eat-visualize` ([docs/visualize.md](docs/visualize.md)) |
 | **模糊请求** | 今天、怎么办、今天吃、晚餐、午餐、早餐 | `what-to-eat-recommend` (默认推荐) |
 
 ## 2. 意图分发

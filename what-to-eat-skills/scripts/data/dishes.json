@@ -1,0 +1,29 @@
+{
+  "dishes": [
+    {
+      "category": "川菜",
+      "tags": [],
+      "ingredients": [],
+      "prepTime": 30,
+      "difficulty": "简单",
+      "addedDate": "2026-07-25",
+      "lastEaten": "2026-07-25",
+      "eatCount": 1,
+      "name": "最终测试菜"
+    },
+    {
+      "category": "川菜",
+      "tags": [
+        "验证"
+      ],
+      "ingredients": [],
+      "prepTime": 30,
+      "difficulty": "简单",
+      "addedDate": "2026-07-25",
+      "lastEaten": "2026-07-25",
+      "eatCount": 1,
+      "name": "验证菜"
+    }
+  ],
+  "pending": []
+}

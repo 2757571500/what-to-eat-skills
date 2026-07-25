@@ -1,0 +1,5 @@
+{
+  "dataPath": "./data/dishes.json",
+  "version": "2.0.0",
+  "description": "数据文件路径（支持绝对路径、相对路径或文件名）"
+}

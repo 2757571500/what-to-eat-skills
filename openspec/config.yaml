@@ -1,20 +1,76 @@
+# openspec/config.yaml
+# Skill 开发项目专用配置
+
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+context: |
+  # 项目定位
+  项目类型: AI Agent Skills 开发项目
+  核心产物: SKILL.md 格式的 Agent Skill 包
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+  # 语言规范（强制）
+  输出语言: 所有生成的文档、代码注释、用户可见输出统一使用简体中文
+  Skill 内提示词、说明、示例、错误信息全部使用中文
+  仅技术专有名词、命令、变量名保留英文原文
+
+  # 技术与格式规范
+  Skill 格式标准: Agent Skills Spec (SKILL.md + YAML Frontmatter)
+  目录结构规范:
+    - 每个 Skill 独立目录: skills/{skill-name}/
+    - 入口文件: SKILL.md (必填)
+    - 附属目录: scripts/ (可执行脚本)、references/ (参考文档)、assets/ (模板/资源)
+  Frontmatter 必填字段: name, description
+  Frontmatter 推荐字段: version, author, tags, allowed-tools, license
+  description 写作规范:
+    - 第一句: 说明 Skill 做什么
+    - 第二句: 说明触发场景/关键词 (何时使用)
+    - 控制在 1-3 句内
+    - 使用中文描述
+
+  # 开发语言与运行环境
+  脚本语言: Bash / Python 3.10+ / Node.js (按需选择)
+  跨平台要求: 兼容 macOS、Linux、Windows (优先使用 path 处理，避免硬编码分隔符)
+  编码规范: UTF-8, LF 换行
+
+  # 质量原则
+  - Skill 必须可独立运行，不依赖项目外部隐式状态
+  - 优先声明式描述，减少硬编码逻辑
+  - 所有工具调用必须在 allowed-tools 中显式声明
+  - 用户可见输出使用简体中文，错误信息包含可操作的修复建议
+
+rules:
+  proposal:
+    - 全部使用简体中文撰写
+    - 明确 Skill 的目标用户和使用场景
+    - 列出触发关键词 / 典型调用话术
+    - 说明依赖的工具权限 (allowed-tools) 和外部资源
+    - 包含兼容性说明 (支持哪些 Agent: Claude Code / Cursor / Windsurf 等)
+    - 评估是否需要 scripts/ 辅助脚本，以及脚本的安全风险
+
+  specs:
+    - 全部使用简体中文撰写，Given/When/Then 关键字可保留英文
+    - 使用 Given/When/Then 格式描述 Skill 行为
+    - 每个 Scenario 必须包含可验证的输出结果
+    - 覆盖正常流程、边界情况、错误处理三类场景
+    - Frontmatter 字段必须逐一明确约束 (必填/可选/格式)
+    - 明确 allowed-tools 的最小权限原则，只授权必要工具
+    - 若包含 scripts/，必须指定脚本输入输出契约和失败退出码
+
+  design:
+    - 全部使用简体中文撰写
+    - 说明 Skill 的整体结构 (SKILL.md 主体章节划分)
+    - scripts/ 脚本的职责边界和调用方式
+    - references/ 参考文档的加载时机 (启动加载 / 按需读取)
+    - 与其他 Skill 的依赖或互斥关系 (如有)
+    - 性能考虑: 避免启动时加载过大文件
+    - 安全考虑: 禁止执行未校验的用户输入作为命令
+
+  tasks:
+    - 全部使用简体中文撰写
+    - 包含 Frontmatter 元数据编写任务
+    - 包含 SKILL.md 主体内容编写任务
+    - 包含 scripts/ 脚本实现与单测任务 (如有)
+    - 包含本地验证任务: 在目标 Agent 中实测加载和触发
+    - 包含跨平台兼容性验证 (至少 Linux + macOS)
+    - 包含文档示例: 提供至少 1 个完整调用示例
+    - 包含中文语言校验: 确认所有用户可见内容为简体中文

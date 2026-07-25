@@ -1,5 +1,32 @@
 # 菜品推荐
 
+## 前提条件
+
+本文档假设你当前位于 **what-to-eat-skills** Skill 集合的根目录。
+
+```bash
+# 进入 Skill 集合根目录
+cd what-to-eat-skills
+```
+
+**标准目录结构**：
+```
+what-to-eat-skills/                  ← 当前工作目录
+├── SKILL.md                         ← 总控入口
+├── docs/                            ← 本文档
+├── scripts/                         ← 共享库
+├── what-to-eat-collect/
+├── what-to-eat-manage/
+├── what-to-eat-recommend/           ← 目标 Skill
+│   └── scripts/
+│       └── recommend.sh            ← 目标脚本
+└── what-to-eat-visualize/
+```
+
+所有命令均使用相对于 `what-to-eat-skills/` 目录的路径。
+
+---
+
 ## 推荐策略
 
 系统提供 4 种推荐策略，可根据用户需求选择：
@@ -10,7 +37,7 @@
 
 **CLI 命令**:
 ```bash
-bash scripts/recommend.sh recommend --strategy rotation
+bash what-to-eat-recommend/scripts/recommend.sh recommend --strategy rotation
 ```
 
 ### 2. 随机抽签
@@ -19,7 +46,7 @@ bash scripts/recommend.sh recommend --strategy rotation
 
 **CLI 命令**:
 ```bash
-bash scripts/recommend.sh recommend --strategy random
+bash what-to-eat-recommend/scripts/recommend.sh recommend --strategy random
 ```
 
 ### 3. 条件筛选
@@ -35,7 +62,7 @@ bash scripts/recommend.sh recommend --strategy random
 
 **CLI 命令**:
 ```bash
-bash scripts/recommend.sh recommend --strategy filter [--category 分类] [--tag 标签] [--max-time 分钟] [--difficulty 难度]
+bash what-to-eat-recommend/scripts/recommend.sh recommend --strategy filter [--category 分类] [--tag 标签] [--max-time 分钟] [--difficulty 难度]
 ```
 
 ### 4. 加权推荐
@@ -47,7 +74,7 @@ bash scripts/recommend.sh recommend --strategy filter [--category 分类] [--tag
 
 **CLI 命令**:
 ```bash
-bash scripts/recommend.sh recommend --strategy weighted [--flavor 口味]
+bash what-to-eat-recommend/scripts/recommend.sh recommend --strategy weighted [--flavor 口味]
 ```
 
 ---
@@ -56,7 +83,7 @@ bash scripts/recommend.sh recommend --strategy weighted [--flavor 口味]
 
 **CLI 命令**:
 ```bash
-bash scripts/recommend.sh stats
+bash what-to-eat-recommend/scripts/recommend.sh stats
 ```
 
 ---
@@ -65,7 +92,7 @@ bash scripts/recommend.sh stats
 
 **CLI 命令**:
 ```bash
-bash scripts/recommend.sh list [--sort rotation]
+bash what-to-eat-recommend/scripts/recommend.sh list [--sort rotation]
 ```
 
 ---

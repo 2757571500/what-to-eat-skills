@@ -72,9 +72,6 @@ what-to-eat-skills/                    # 主工作目录
 ### 数据收集（collect.sh）
 
 ```bash
-# 进入脚本目录
-cd what-to-eat-skills
-
 # 添加菜品（支持可选参数）
 bash what-to-eat-collect/scripts/collect.sh add "麻婆豆腐"
 bash what-to-eat-collect/scripts/collect.sh add "番茄炒鸡蛋" --category 家常菜 --prepTime 15 --difficulty 简单
@@ -244,11 +241,11 @@ $env:DEBUG="what-to-eat"; bash what-to-eat-collect/scripts/collect.sh add "测�
 共享库使用 CommonJS 模块系统，修改后立即生效（无需构建）：
 
 ```bash
-# 1. 修改 scripts/lib/*.js
-vim what-to-eat-skills/scripts/lib/dishes.js
+# 1. 修改共享库（位于项目根目录的 scripts/lib/）
+vim scripts/lib/dishes.js
 
 # 2. 测试
-bash what-to-eat-skills/what-to-eat-manage/scripts/manage.sh stats
+bash what-to-eat-manage/scripts/manage.sh stats
 ```
 
 ### 添加新功能
@@ -288,9 +285,9 @@ case "new-strategy": {
 
 ```bash
 # 功能测试
-bash what-to-eat-skills/what-to-eat-collect/scripts/collect.sh list-pending
-bash what-to-eat-skills/what-to-eat-manage/scripts/manage.sh stats
-bash what-to-eat-skills/what-to-eat-recommend/scripts/recommend.sh recommend
+bash what-to-eat-collect/scripts/collect.sh list-pending
+bash what-to-eat-manage/scripts/manage.sh stats
+bash what-to-eat-recommend/scripts/recommend.sh recommend
 
 # 集成测试：collect → recommend
 bash what-to-eat-collect/scripts/collect.sh add "测试菜品"

@@ -19,12 +19,13 @@ version: "1.0.0"
    - 提取关键词
    - 判断意图类型
 
-2. **分发到子 Skill**
-   - 使用 `Skill` 工具调用对应子 skill
-   - 传递用户原始输入和解析结果
+2. **分发到子模块**
+   - 根据意图类型确定目标 Skill
+   - 使用 `cd` 切换到对应 Skill 目录
+   - 在 Skill 目录内执行相对路径脚本 `scripts/*.sh`
 
 3. **处理返回结果**
-   - 子 skill 执行完成后，返回结果给用户
+   - 脚本执行完成后，返回结果给用户
    - 如果需要进一步操作，继续流转
 
 4. **按需加载文档**（如需要详细操作步骤）
@@ -44,11 +45,26 @@ version: "1.0.0"
 
 ## 2. 意图分发
 
-根据识别结果，调用对应的子 skill：
+根据识别结果，切换到对应 Skill 目录并执行相对路径脚本：
 
-```markdown
-当意图为 [意图类型] 时，调用 what-to-eat-[意图类型] Skill 处理用户请求
+```powershell
+# 菜品收集
+PowerShell(cd what-to-eat-collect; bash scripts/collect.sh <子命令> [参数])
+
+# 菜品推荐
+PowerShell(cd what-to-eat-recommend; bash scripts/recommend.sh <子命令> [参数])
+
+# 日常管理
+PowerShell(cd what-to-eat-manage; bash scripts/manage.sh <子命令> [参数])
+
+# 可视化
+PowerShell(cd what-to-eat-visualize; bash scripts/visualize.sh [端口])
 ```
+
+**注意**：
+- 所有路径均相对于 `what-to-eat-skills/` 集合根目录
+- 先 `cd` 到目标 Skill 目录，再使用相对路径 `scripts/*.sh` 执行脚本
+- 不要使用 `Skill()` 工具调用子目录，它们不是独立的 Claude Code Skill
 
 ## 示例
 
@@ -56,21 +72,22 @@ version: "1.0.0"
 ```
 用户: "今天吃什么"
 → 意图: 模糊请求 → 菜品推荐
-→ 调用: what-to-eat-recommend
-→ 执行: 默认轮换优先推荐
+→ 执行: PowerShell(cd what-to-eat-recommend; bash scripts/recommend.sh recommend)
+→ 返回: 轮换优先推荐结果
 ```
 
 ### 示例 2：明确意图 - 添加菜品
 ```
 用户: "加个麻婆豆腐"
 → 意图: 菜品收集
-→ 调用: what-to-eat-collect
-→ 执行: 解析"麻婆豆腐"为菜品名称，执行 add 命令
+→ 执行: PowerShell(cd what-to-eat-collect; bash scripts/collect.sh add "麻婆豆腐")
+→ 返回: 添加成功确认
 ```
 
 ## 注意事项
 
-- **不执行 CLI 命令**：总控 Skill 只负责意图识别和分发，不直接执行任何操作
+- **使用相对路径**：在对应 Skill 目录内执行脚本，使用 `scripts/*.sh` 相对路径
+- **先 cd 到 Skill 目录**：使用 `cd <skill-name>` 切换到目标 Skill
 - **保持上下文**：如果用户连续多次输入，保持上下文连贯性
 - **友好引导**：当意图不明确时，提供清晰的选择而不是让用户困惑
-- **子 skill 独立性**：每个子 skill 可以独立工作，不依赖总控
+- **子目录不是 Skill**：what-to-eat-collect 等目录只是文档和脚本的组织方式

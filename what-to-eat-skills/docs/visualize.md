@@ -1,10 +1,38 @@
 # 可视化
 
+## 前提条件
+
+本文档假设你当前位于 **what-to-eat-skills** Skill 集合的根目录。
+
+```bash
+# 进入 Skill 集合根目录
+cd what-to-eat-skills
+```
+
+**标准目录结构**：
+```
+what-to-eat-skills/                  ← 当前工作目录
+├── SKILL.md                         ← 总控入口
+├── docs/                            ← 本文档
+├── scripts/                         ← 共享库
+├── what-to-eat-collect/
+├── what-to-eat-manage/
+├── what-to-eat-recommend/
+└── what-to-eat-visualize/           ← 目标 Skill
+    └── scripts/
+        ├── visualize.sh            ← 目标脚本
+        └── server.js
+```
+
+所有命令均使用相对于 `what-to-eat-skills/` 目录的路径。
+
+---
+
 ## 启动可视化服务器
 
 **CLI 命令**:
 ```bash
-bash scripts/visualize.sh [端口]
+bash what-to-eat-visualize/scripts/visualize.sh [端口]
 ```
 
 **默认端口**: 3000
@@ -13,7 +41,7 @@ bash scripts/visualize.sh [端口]
 
 ```
 用户: "打开看看"
-→ 执行: bash scripts/visualize.sh 3000
+→ 执行: bash what-to-eat-visualize/scripts/visualize.sh 3000
 → 打开浏览器: http://localhost:3000
 → 回复: "🍳 菜品可视化页面已启动\n   浏览器已打开 http://localhost:3000\n   按 Ctrl+C 停止服务器"
 ```

@@ -1,10 +1,37 @@
 # 菜品收集
 
+## 前提条件
+
+本文档假设你当前位于 **what-to-eat-skills** Skill 集合的根目录。
+
+```bash
+# 进入 Skill 集合根目录
+cd what-to-eat-skills
+```
+
+**标准目录结构**：
+```
+what-to-eat-skills/                  ← 当前工作目录
+├── SKILL.md                         ← 总控入口
+├── docs/                            ← 本文档
+├── scripts/                         ← 共享库
+├── what-to-eat-collect/             ← 目标 Skill
+│   └── scripts/
+│       └── collect.sh              ← 目标脚本
+├── what-to-eat-manage/
+├── what-to-eat-recommend/
+└── what-to-eat-visualize/
+```
+
+所有命令均使用相对于 `what-to-eat-skills/` 目录的路径。
+
+---
+
 ## 1. 手动录入菜品
 
 **CLI 命令**:
 ```bash
-bash scripts/collect.sh add <菜名> [--category 分类] [--tags 标签1,标签2] [--ingredients 食材1,食材2] [--prepTime 分钟] [--difficulty 难度]
+bash what-to-eat-collect/scripts/collect.sh add <菜名> [--category 分类] [--tags 标签1,标签2] [--ingredients 食材1,食材2] [--prepTime 分钟] [--difficulty 难度]
 ```
 
 **参数说明**:
@@ -21,11 +48,11 @@ bash scripts/collect.sh add <菜名> [--category 分类] [--tags 标签1,标签2
 
 ```
 用户: "加个麻婆豆腐"
-→ 执行: bash scripts/collect.sh add "麻婆豆腐"
+→ 执行: bash what-to-eat-collect/scripts/collect.sh add "麻婆豆腐"
 → 回复: "已添加「麻婆豆腐」到待确认列表"
 
 用户: "加个番茄炒鸡蛋，分类是家常菜，15分钟，简单"
-→ 执行: bash scripts/collect.sh add "番茄炒鸡蛋" --category 家常菜 --prepTime 15 --difficulty 简单
+→ 执行: bash what-to-eat-collect/scripts/collect.sh add "番茄炒鸡蛋" --category 家常菜 --prepTime 15 --difficulty 简单
 → 回复: "已添加「番茄炒鸡蛋」到待确认列表"
 ```
 
@@ -35,14 +62,14 @@ bash scripts/collect.sh add <菜名> [--category 分类] [--tags 标签1,标签2
 
 **CLI 命令**:
 ```bash
-bash scripts/collect.sh list-pending
+bash what-to-eat-collect/scripts/collect.sh list-pending
 ```
 
 **示例对话**:
 
 ```
 用户: "看看有哪些待确认的"
-→ 执行: bash scripts/collect.sh list-pending
+→ 执行: bash what-to-eat-collect/scripts/collect.sh list-pending
 → 回复:
   📋 待确认菜品 (2 道):
 
@@ -61,7 +88,7 @@ bash scripts/collect.sh list-pending
 
 **CLI 命令**:
 ```bash
-bash scripts/collect.sh confirm <名称|索引>
+bash what-to-eat-collect/scripts/collect.sh confirm <名称|索引>
 ```
 
 **示例对话**:
@@ -69,11 +96,11 @@ bash scripts/collect.sh confirm <名称|索引>
 ```
 用户: "确认第 2 个"
 → 解析索引: 1 (0-based)
-→ 执行: bash scripts/collect.sh confirm 1
+→ 执行: bash what-to-eat-collect/scripts/collect.sh confirm 1
 → 回复: "已确认「糖醋排骨」→ 加入菜品库"
 
 用户: "确认水煮鱼"
-→ 执行: bash scripts/collect.sh confirm "水煮鱼"
+→ 执行: bash what-to-eat-collect/scripts/collect.sh confirm "水煮鱼"
 → 回复: "已确认「水煮鱼」→ 加入菜品库"
 ```
 
@@ -86,18 +113,18 @@ bash scripts/collect.sh confirm <名称|索引>
 
 **CLI 命令**:
 ```bash
-bash scripts/collect.sh reject <名称|索引>
+bash what-to-eat-collect/scripts/collect.sh reject <名称|索引>
 ```
 
 **示例对话**:
 
 ```
 用户: "拒绝第 1 个"
-→ 执行: bash scripts/collect.sh reject 0
+→ 执行: bash what-to-eat-collect/scripts/collect.sh reject 0
 → 回复: "已拒绝「水煮鱼」"
 
 用户: "不要番茄炒鸡蛋了"
-→ 执行: bash scripts/collect.sh reject "番茄炒鸡蛋"
+→ 执行: bash what-to-eat-collect/scripts/collect.sh reject "番茄炒鸡蛋"
 → 回复: "已拒绝「番茄炒鸡蛋」"
 ```
 
@@ -107,12 +134,12 @@ bash scripts/collect.sh reject <名称|索引>
 
 **确认全部**:
 ```bash
-bash scripts/collect.sh confirm-all
+bash what-to-eat-collect/scripts/collect.sh confirm-all
 ```
 
 **拒绝全部**:
 ```bash
-bash scripts/collect.sh reject-all
+bash what-to-eat-collect/scripts/collect.sh reject-all
 ```
 
 ---
@@ -121,7 +148,7 @@ bash scripts/collect.sh reject-all
 
 **CLI 命令**:
 ```bash
-bash scripts/collect.sh auto-generate [--count N]
+bash what-to-eat-collect/scripts/collect.sh auto-generate [--count N]
 ```
 
 **参数**:
@@ -131,7 +158,7 @@ bash scripts/collect.sh auto-generate [--count N]
 
 ```
 用户: "生成 3 道新菜"
-→ 执行: bash scripts/collect.sh auto-generate --count 3
+→ 执行: bash what-to-eat-collect/scripts/collect.sh auto-generate --count 3
 → 回复: "🤖 AI 生成策略: 种子库采样 + 变体组合\n  1. 鱼香肉丝 | 川菜 | 20分钟 | 中等\n  2. ...\n  3. ..."
 ```
 

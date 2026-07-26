@@ -121,11 +121,25 @@ switch (command) {
     break;
   }
   case "config-set": {
+    const path = require("path");
     const key = args[1];
-    const value = args[2];
+    let value = args[2];
     if (!key || !value) {
       console.log("Usage: collect.sh config-set <key> <value>");
       break;
+    }
+    // 对 dataPath 做路径规范化（兼容 Windows 反斜杠）
+    if (key === "dataPath") {
+      // 疑似反斜杠被 shell 剥离检测：盘符后直接跟字母，无路径分隔符
+      if (/^[A-Za-z]:[^\\/]/.test(value)) {
+        console.log("⚠️ 检测到路径可能缺失分隔符，Windows 用户请使用正斜杠（如 D:/eat/dishes.json）或单引号包裹路径");
+      }
+      // path.normalize 处理混合斜杠，再统一转为正斜杠存储
+      value = path.normalize(value).replace(/\\/g, "/");
+      // path.normalize 会去掉 "./" 前缀，需补回以保证 resolvePath 走相对路径分支
+      if ((args[2].startsWith("./") || args[2].startsWith(".\\")) && !value.startsWith("./") && !path.isAbsolute(value)) {
+        value = "./" + value;
+      }
     }
     const { DataAccessor } = require("./data-accessor.js");
     const da = new DataAccessor();
@@ -151,6 +165,55 @@ switch (command) {
     process.exit(valid ? 0 : 1);
     break;
   }
+  case "config-migrate": {
+    const path = require("path");
+    const { DataAccessor } = require("./data-accessor.js");
+    const da = new DataAccessor();
+    const rawNewPath = args[1];
+    const force = args.includes("--force");
+    if (!rawNewPath) {
+      console.log("Usage: collect.sh config-migrate <新路径> [--force]");
+      break;
+    }
+    // 规范化新路径（与 config-set 一致）
+    let newPath = path.normalize(rawNewPath).replace(/\\/g, "/");
+    if ((rawNewPath.startsWith("./") || rawNewPath.startsWith(".\\")) && !newPath.startsWith("./") && !path.isAbsolute(newPath)) {
+      newPath = "./" + newPath;
+    }
+    // 通过 resolvePath 解析（含目录自动补全 dishes.json）
+    const newDishesFile = da.resolvePath(newPath);
+    // 派生新 pending 路径（与 getPendingPath 逻辑一致）
+    const newDataFileName = path.basename(newDishesFile);
+    const ext = path.extname(newDataFileName);
+    const baseName = ext ? newDataFileName.slice(0, -ext.length) : newDataFileName;
+    const newPendingFile = path.join(path.dirname(newDishesFile), baseName + "-pending.json");
+    // 旧路径
+    const oldDishesFile = da.getDataPath();
+    const oldPendingFile = da.getPendingPath();
+    // 旧路径数据文件不存在时报错
+    if (!fs.existsSync(oldDishesFile)) {
+      console.log("❌ 当前数据路径无数据文件可迁移");
+      process.exit(1);
+    }
+    // 目标路径已有数据文件时提示（无 --force 则退出）
+    if (fs.existsSync(newDishesFile) && !force) {
+      console.log("⚠️ 目标路径已有数据文件，如需覆盖请使用 --force 参数");
+      break;
+    }
+    // 确保目标目录存在
+    const newDir = path.dirname(newDishesFile);
+    if (!fs.existsSync(newDir)) {
+      fs.mkdirSync(newDir, { recursive: true });
+    }
+    // 复制 dishes.json
+    fs.copyFileSync(oldDishesFile, newDishesFile);
+    // 复制 pending（如果存在）
+    if (fs.existsSync(oldPendingFile)) {
+      fs.copyFileSync(oldPendingFile, newPendingFile);
+    }
+    console.log("✅ 已迁移数据到 " + newPath + "，请执行 config-set dataPath \"" + newPath + "\" 完成切换");
+    break;
+  }
   case "auto-generate": {
     const count = parseInt(args[1]) || 3;
     const result = autoGenerate(count);
@@ -158,6 +221,6 @@ switch (command) {
     break;
   }
   default:
-    console.log("Usage: collect.sh {add|list-pending|confirm|reject|confirm-all|reject-all|auto-generate|config-show|config-set|config-validate}");
+    console.log("Usage: collect.sh {add|list-pending|confirm|reject|confirm-all|reject-all|auto-generate|config-show|config-set|config-migrate|config-validate}");
 }
 ' "$@"

@@ -92,9 +92,16 @@ class DataAccessor {
   }
 
   /**
-   * 解析路径（支持绝对路径、相对路径、文件名）
+   * 解析路径（支持绝对路径、相对路径、文件名、目录自动补全）
+   * 若路径无文件扩展名，视为目录并自动补全 dishes.json
    */
   resolvePath(dataPath) {
+    // 目录路径自动补全：无扩展名时补全 dishes.json（用字符串拼接保留 ./ 等前缀）
+    if (!path.extname(dataPath)) {
+      const sep = dataPath.endsWith('/') || dataPath.endsWith('\\') ? '' : '/';
+      dataPath = dataPath + sep + 'dishes.json';
+    }
+
     // 绝对路径 → 直接使用
     if (path.isAbsolute(dataPath)) {
       return dataPath;

@@ -48,6 +48,44 @@ bash what-to-eat-visualize/scripts/visualize.sh [端口]
 
 ---
 
+## 停止可视化服务器
+
+### 推荐方式：HTTP 端点关闭（跨平台）
+
+向服务器发送 `POST /api/shutdown` 请求，服务器会优雅关闭：
+
+```bash
+# Windows PowerShell（推荐）
+Invoke-RestMethod -Uri 'http://localhost:3000/api/shutdown' -Method Post
+
+# Linux / macOS（推荐）
+curl -X POST http://localhost:3000/api/shutdown
+```
+
+### 备选方式：按端口查杀进程
+
+若 HTTP 端点不可用（服务器已无响应），可按端口查杀进程：
+
+```powershell
+# Windows PowerShell（注意：不要使用 $pid 保留变量，需过滤 PID 0）
+Get-NetTCPConnection -LocalPort 3000 | Where-Object { $_.OwningProcess -ne 0 } | Select-Object -Unique OwningProcess | ForEach-Object { Stop-Process -Id $_ -Force }
+```
+
+```bash
+# Linux / macOS
+kill $(lsof -t -i:3000)
+```
+
+### 重载配置（无需重启）
+
+服务器每次请求都会动态读取配置文件，`config-set` 修改 `dataPath` 后**无需重启服务器**，下次刷新页面即可看到新路径数据。也可通过 `POST /api/reload` 端点主动通知外部系统配置已变更：
+
+```bash
+curl -X POST http://localhost:3000/api/reload
+```
+
+---
+
 ## 浏览器自动化
 
 **根据操作系统选择合适的打开方式**:
@@ -78,7 +116,7 @@ xdg-open http://localhost:3000
 
 ## 常见错误场景
 
-1. **端口被占用**: 提示用户使用其他端口
+1. **端口被占用**: 旧服务器可能仍在运行。先尝试 `Invoke-RestMethod -Uri 'http://localhost:3000/api/shutdown' -Method Post`（PowerShell）或 `curl -X POST http://localhost:3000/api/shutdown`（Linux）关闭旧服务器；若仍被占用再使用其他端口
 2. **服务器启动失败**: 检查端口和 Node.js 环境
 3. **数据文件缺失**: 确保 data/dishes.json 存在
 

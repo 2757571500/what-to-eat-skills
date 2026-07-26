@@ -7,7 +7,7 @@
  * - require('./seed.js') - 种子数据
  */
 
-const { addDish, getAllDishes, getPending, pickRandom, randInt } = require('./dishes.js');
+const { addDish, pickRandom, randInt, dishExists } = require('./dishes.js');
 const { SEED_DISHES, DIFFICULTIES, CATEGORIES } = require('./seed.js');
 
 // ── 菜品变体生成器 ─────────────────────────────
@@ -23,18 +23,17 @@ const RANDOM_TAGS = [['快手', '下饭'], ['清淡', '家常'], ['荤菜', '下
  * @returns {Array} 变体菜品列表
  */
 function generateVariantDishes(count) {
-  const used = new Set([...getAllDishes().map(d => d.name), ...getPending().map(d => d.name)]);
   const candidates = [];
 
-  // 优先从种子库挑还没入库的
-  const fromSeed = SEED_DISHES.filter(d => !used.has(d.name));
+  // 优先从种子库挑还没入库的（使用公共 dishExists 判断重复）
+  const fromSeed = SEED_DISHES.filter(d => !dishExists(d.name));
   candidates.push(...fromSeed);
 
   // 种子库不够就生成变体
   for (const base of VARIANT_PREFIXES) {
     for (const ing of VARIANT_INGREDIENTS) {
       const name = `${base}${ing}`;
-      if (!used.has(name) && !candidates.find(c => c.name === name)) {
+      if (!dishExists(name) && !candidates.find(c => c.name === name)) {
         candidates.push({
           name,
           category: pickRandom(CATEGORIES.filter(c => c !== '主食' && c !== '甜品')),

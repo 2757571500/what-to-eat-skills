@@ -164,6 +164,58 @@ bash what-to-eat-collect/scripts/collect.sh auto-generate [--count N]
 
 ---
 
+## 7. 配置管理
+
+### 修改数据路径
+
+```bash
+bash what-to-eat-collect/scripts/collect.sh config-set dataPath <路径>
+```
+
+**Windows 路径注意事项**：
+
+Windows 用户在使用 `config-set` 设置 `dataPath` 时，**必须使用正斜杠 `/`** 或用单引号包裹路径，避免反斜杠被 shell 剥离：
+
+```bash
+# ✅ 推荐：使用正斜杠
+bash what-to-eat-collect/scripts/collect.sh config-set dataPath "D:/eat/dishes.json"
+
+# ✅ 推荐：单引号包裹（保留反斜杠，会被自动归一化为正斜杠）
+bash what-to-eat-collect/scripts/collect.sh config-set dataPath 'D:\eat\dishes.json'
+
+# ❌ 避免：双引号 + 反斜杠（bash/PowerShell 会剥离反斜杠，导致路径损坏）
+bash what-to-eat-collect/scripts/collect.sh config-set dataPath "D:\eat\dishes.json"
+
+# ✅ 目录路径会自动补全 dishes.json
+bash what-to-eat-collect/scripts/collect.sh config-set dataPath "D:/eat"
+# 实际数据路径解析为 D:/eat/dishes.json
+```
+
+若检测到路径疑似缺失分隔符（盘符后直接跟字母），系统会输出警告但仍写入配置。
+
+### 迁移数据文件
+
+切换 `dataPath` 时，可使用 `config-migrate` 命令将旧路径的数据文件复制到新路径，避免数据"丢失"：
+
+```bash
+bash what-to-eat-collect/scripts/collect.sh config-migrate <新路径> [--force]
+```
+
+**示例**：
+
+```bash
+# 将当前数据迁移到新路径
+bash what-to-eat-collect/scripts/collect.sh config-migrate "D:/eat/dishes.json"
+# 输出: ✅ 已迁移数据到 D:/eat/dishes.json，请执行 config-set dataPath "D:/eat/dishes.json" 完成切换
+
+# 目标路径已有数据文件时，使用 --force 覆盖
+bash what-to-eat-collect/scripts/collect.sh config-migrate "D:/eat/dishes.json" --force
+```
+
+迁移会复制 `dishes.json` 和 `dishes-pending.json` 两个文件。迁移完成后需手动执行 `config-set dataPath <新路径>` 完成切换。
+
+---
+
 ## 常见错误场景
 
 1. **菜品已存在**: 添加已存在的菜品会返回错误

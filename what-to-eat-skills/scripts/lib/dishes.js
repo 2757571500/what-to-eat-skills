@@ -78,6 +78,23 @@ function normalizeDish(raw) {
   return { ...DEFAULT_DISH, ...raw, name: raw.name.trim() };
 }
 
+// ── 防重复校验 ──────────────────────────────────
+
+/**
+ * 检查菜品名称是否已存在于正式库或待确认列表
+ * 比较前对 name 做 trim() 归一化
+ * @param {string} name - 菜品名称
+ * @returns {boolean} 已存在返回 true
+ */
+function dishExists(name) {
+  if (!name || typeof name !== 'string') return false;
+  const target = name.trim();
+  if (!target) return false;
+  const inDishes = getAllDishes().some(d => d.name && d.name.trim() === target);
+  if (inDishes) return true;
+  return getPending().some(d => d.name && d.name.trim() === target);
+}
+
 // ── 数据访问 ──────────────────────────────────
 
 function getAllDishes() {
@@ -132,9 +149,13 @@ function removePending(index) {
 }
 
 function addDish(dish) {
-  const pending = getPending();
   const entry = normalizeDish(dish);
   if (!entry) return { ok: false, error: '无效菜品数据' };
+  // 防重复校验：检查正式库和待确认列表
+  if (dishExists(entry.name)) {
+    return { ok: false, error: '菜品「' + entry.name + '」已存在' };
+  }
+  const pending = getPending();
   entry.addedDate = today();
   pending.push(entry);
   savePending(pending);
@@ -286,6 +307,8 @@ module.exports = {
   movePendingToDishes, removePending,
   // CRUD 操作
   addDish, recordEat, deleteDish,
+  // 防重复校验
+  dishExists,
   // 待确认队列操作
   confirmPending, rejectPending, confirmAll, rejectAll,
   // 格式化输出

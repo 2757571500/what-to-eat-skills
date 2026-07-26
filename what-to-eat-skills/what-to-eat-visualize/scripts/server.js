@@ -26,11 +26,6 @@ const SHARED_LIB_DIR = path.resolve(__dirname, '../../scripts/lib');
 const { DataAccessor } = require(path.join(SHARED_LIB_DIR, 'data-accessor.js'));
 const { confirmPending, rejectPending } = require(path.join(SHARED_LIB_DIR, 'dishes.js'));
 
-// 使用 DataAccessor 获取数据文件路径
-const dataAccessor = new DataAccessor();
-const DISHES_FILE = dataAccessor.getDataPath();
-const PENDING_FILE = dataAccessor.getPendingPath();
-
 const MIME = {
   '.html': 'text/html; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
@@ -49,12 +44,17 @@ function resolvePath(url) {
 
 function serveDataJson(res) {
   try {
-    const dishesData = JSON.parse(fs.readFileSync(DISHES_FILE, 'utf-8'));
+    // 每次请求动态创建 DataAccessor 获取最新路径，配置变更后无需重启
+    const da = new DataAccessor();
+    const dishesFile = da.getDataPath();
+    const pendingFile = da.getPendingPath();
+
+    const dishesData = JSON.parse(fs.readFileSync(dishesFile, 'utf-8'));
     const dishes = Array.isArray(dishesData) ? dishesData : (dishesData.dishes || []);
 
     let pending = [];
-    if (fs.existsSync(PENDING_FILE)) {
-      const pendingData = JSON.parse(fs.readFileSync(PENDING_FILE, 'utf-8'));
+    if (fs.existsSync(pendingFile)) {
+      const pendingData = JSON.parse(fs.readFileSync(pendingFile, 'utf-8'));
       pending = Array.isArray(pendingData) ? pendingData : (pendingData.pending || []);
     }
 
@@ -67,7 +67,7 @@ function serveDataJson(res) {
   }
 }
 
-function handleApiRequest(req, res, url) {
+function handleApiRequest(req, res, url, server) {
   // POST /api/confirm?index=N — 确认第 N 个待确认菜品
   if (url.pathname === '/api/confirm' && req.method === 'POST') {
     const index = url.searchParams.get('index');
@@ -96,14 +96,29 @@ function handleApiRequest(req, res, url) {
     return true;
   }
 
+  // POST /api/reload — 通知服务器重新读取配置（动态读取已生效，此端点供外部系统确认）
+  if (url.pathname === '/api/reload' && req.method === 'POST') {
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ ok: true, message: '配置已重新加载' }));
+    return true;
+  }
+
+  // POST /api/shutdown — 优雅关闭服务器
+  if (url.pathname === '/api/shutdown' && req.method === 'POST') {
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ ok: true, message: '服务器正在关闭' }));
+    server.close();
+    return true;
+  }
+
   return false;
 }
 
 const server = http.createServer((req, res) => {
   const parsedUrl = new URL(req.url, `http://localhost:${PORT}`);
 
-  // 先检查 API 请求（POST /api/confirm, POST /api/reject）
-  if (handleApiRequest(req, res, parsedUrl)) return;
+  // 先检查 API 请求（POST /api/confirm, POST /api/reject, POST /api/reload, POST /api/shutdown）
+  if (handleApiRequest(req, res, parsedUrl, server)) return;
 
   const resolved = resolvePath(req.url);
 

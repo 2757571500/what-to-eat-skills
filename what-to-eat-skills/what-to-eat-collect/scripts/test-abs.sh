@@ -1,10 +1,21 @@
 #!/bin/bash
-cd "$(dirname "$0")"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SHARED_LIB_DIR="$(cd "$SCRIPT_DIR/../../scripts/lib" && pwd)"
 cd "$SHARED_LIB_DIR"
 
+# 检测 node 命令（WSL 下可能需要使用 node.exe）
+NODE_CMD="node"
+if ! command -v node &>/dev/null; then
+  if command -v node.exe &>/dev/null; then
+    NODE_CMD="node.exe"
+  else
+    echo "Error: node not found" >&2
+    exit 1
+  fi
+fi
+
 # 使用绝对路径测试
-node -e '
+$NODE_CMD -e '
 const { DataAccessor } = require("./data-accessor.js");
 const { getPending, addDish } = require("./dishes.js");
 

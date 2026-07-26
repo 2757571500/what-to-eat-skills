@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🍳 菜品库</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 24px;
+    }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 {
+      color: #fff;
+      text-align: center;
+      font-size: 2rem;
+      margin-bottom: 8px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .subtitle {
+      color: rgba(255,255,255,0.8);
+      text-align: center;
+      margin-bottom: 24px;
+      font-size: 0.95rem;
+    }
+    .controls {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .controls input, .controls select {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      outline: none;
+    }
+    .controls input {
+      flex: 1;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .controls select {
+      background: #fff;
+      cursor: pointer;
+      min-width: 140px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .section {
+      background: #fff;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+    }
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title .badge {
+      background: #667eea;
+      color: #fff;
+      font-size: 0.8rem;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-weight: 500;
+    }
+    .section-title .badge.pending { background: #f59e0b; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+    .card {
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 16px;
+      transition: transform 0.15s, box-shadow 0.15s;
+      position: relative;
+    }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+    .card.pending-card { border-color: #fbbf24; background: #fffbeb; }
+    .card-name {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 10px;
+    }
+    .card-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .meta-tag {
+      font-size: 0.78rem;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: #f3f4f6;
+      color: #6b7280;
+    }
+    .meta-tag.category { background: #ede9fe; color: #7c3aed; }
+    .meta-tag.time { background: #dbeafe; color: #2563eb; }
+    .meta-tag.diff { background: #fce7f3; color: #db2777; }
+    .meta-tag.easy { background: #d1fae5; color: #059669; }
+    .meta-tag.mid { background: #fef3c7; color: #d97706; }
+    .meta-tag.hard { background: #fee2e2; color: #dc2626; }
+    .tags-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+    .tag {
+      font-size: 0.72rem;
+      background: #f0fdf4;
+      color: #16a34a;
+      padding: 1px 8px;
+      border-radius: 10px;
+    }
+    .ingredients-row { margin-top: 8px; font-size: 0.8rem; color: #9ca3af; }
+    .eat-info {
+      margin-top: 8px;
+      font-size: 0.78rem;
+      color: #9ca3af;
+      display: flex;
+      gap: 12px;
+    }
+    .empty {
+      text-align: center;
+      color: #9ca3af;
+      padding: 24px 0;
+      font-size: 0.95rem;
+    }
+    .pending-idx {
+      position: absolute;
+      top: -6px;
+      left: -6px;
+      background: #f59e0b;
+      color: #fff;
+      font-size: 0.7rem;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+    }
+    .loading { text-align: center; color: #fff; padding: 48px 0; font-size: 1.1rem; }
+    .error { background: #fee2e2; color: #dc2626; padding: 16px; border-radius: 12px; text-align: center; }
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      z-index: 999;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+    .toast.success { background: #d1fae5; color: #059669; }
+    .toast.error { background: #fee2e2; color: #dc2626; }
+    .btn-group { margin-top: 12px; display: flex; gap: 8px; }
+    .btn {
+      padding: 6px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn-confirm { background: #059669; color: #fff; }
+    .btn-reject { background: #dc2626; color: #fff; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🍳 菜品库</h1>
+    <p class="subtitle" id="updateTime"></p>
+
+    <div class="controls">
+      <input type="text" id="searchInput" placeholder="搜索菜品名称或食材...">
+      <select id="categoryFilter">
+        <option value="">全部分类</option>
+      </select>
+    </div>
+
+    <div id="content">
+      <div class="loading">加载中...</div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    let allDishes = [];
+    let allPending = [];
+    let searchKeyword = '';
+    let selectedCategory = '';
+
+    const content = document.getElementById('content');
+    const timeEl = document.getElementById('updateTime');
+    const searchInput = document.getElementById('searchInput');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const toast = document.getElementById('toast');
+
+    // ── 工具函数 ──
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function daysSince(dateStr) {
+      if (!dateStr) return null;
+      const d1 = new Date(dateStr + 'T00:00:00');
+      const d2 = new Date();
+      return Math.floor((d2 - d1) / (1000 * 60 * 60 * 24));
+    }
+
+    function showToast(msg, type) {
+      toast.textContent = msg;
+      toast.className = 'toast show ' + (type || 'success');
+      setTimeout(() => { toast.className = 'toast'; }, 2500);
+    }
+
+    // ── 数据加载 ──
+
+    async function loadData() {
+      try {
+        const res = await fetch('/data/');
+        if (!res.ok) throw new Error('数据加载失败');
+        const data = await res.json();
+        allDishes = data.dishes || [];
+        allPending = data.pending || [];
+        updateCategoryFilter();
+        render();
+      } catch (err) {
+        content.innerHTML = '<div class="error">❌ ' + escapeHtml(err.message) + '</div>';
+      }
+    }
+
+    // ── 分类筛选 ──
+
+    function updateCategoryFilter() {
+      const categories = [...new Set(allDishes.map(d => d.category).filter(Boolean))].sort();
+      const current = selectedCategory;
+      categoryFilter.innerHTML = '<option value="">全部分类</option>' +
+        categories.map(c => '<option value="' + escapeHtml(c) + '"' + (c === current ? ' selected' : '') + '>' + escapeHtml(c) + '</option>').join('');
+    }
+
+    // ── 渲染 ──
+
+    function render() {
+      // 过滤正式菜品
+      let filtered = allDishes;
+      if (searchKeyword) {
+        const kw = searchKeyword.toLowerCase();
+        filtered = filtered.filter(d =>
+          (d.name && d.name.toLowerCase().includes(kw)) ||
+          (d.ingredients && d.ingredients.some(i => i.toLowerCase().includes(kw)))
+        );
+      }
+      if (selectedCategory) {
+        filtered = filtered.filter(d => d.category === selectedCategory);
+      }
+
+      timeEl.textContent = '共 ' + allDishes.length + ' 道正式菜品 · ' + allPending.length + ' 道待确认';
+
+      let html = '';
+
+      // 正式菜品
+      html += '<div class="section">';
+      html += '<div class="section-title">✅ 正式菜品库 <span class="badge">' + filtered.length + ' 道' + (filtered.length !== allDishes.length ? ' (筛选自 ' + allDishes.length + ')' : '') + '</span></div>';
+      if (filtered.length === 0) {
+        html += '<div class="empty">没有匹配的菜品 🔍</div>';
+      } else {
+        html += '<div class="cards">';
+        filtered.forEach(d => { html += buildDishCard(d); });
+        html += '</div>';
+      }
+      html += '</div>';
+
+      // 待确认
+      html += '<div class="section">';
+      html += '<div class="section-title">📋 待确认 <span class="badge pending">' + allPending.length + ' 道</span></div>';
+      if (allPending.length === 0) {
+        html += '<div class="empty">暂无待确认菜品 ✨</div>';
+      } else {
+        html += '<div class="cards">';
+        allPending.forEach((d, i) => { html += buildPendingCard(d, i); });
+        html += '</div>';
+      }
+      html += '</div>';
+
+      content.innerHTML = html;
+    }
+
+    function buildDishCard(d) {
+      let diffClass = 'mid';
+      if (d.difficulty === '简单') diffClass = 'easy';
+      else if (d.difficulty === '困难') diffClass = 'hard';
+
+      let html = '<div class="card">';
+      html += '<div class="card-name">' + escapeHtml(d.name) + '</div>';
+      html += '<div class="card-meta">';
+      if (d.category) html += '<span class="meta-tag category">' + escapeHtml(d.category) + '</span>';
+      if (d.prepTime) html += '<span class="meta-tag time">⏱ ' + d.prepTime + '分钟</span>';
+      if (d.difficulty) html += '<span class="meta-tag ' + diffClass + '">' + escapeHtml(d.difficulty) + '</span>';
+      html += '</div>';
+      if (d.tags && d.tags.length > 0) {
+        html += '<div class="tags-row">';
+        d.tags.forEach(t => { html += '<span class="tag">' + escapeHtml(t) + '</span>'; });
+        html += '</div>';
+      }
+      if (d.ingredients && d.ingredients.length > 0) {
+        html += '<div class="ingredients-row">🥬 ' + d.ingredients.map(escapeHtml).join('、') + '</div>';
+      }
+      // 距上次食用天数
+      html += '<div class="eat-info">';
+      const days = daysSince(d.lastEaten);
+      if (days !== null) {
+        html += '<span>🍴 ' + days + ' 天前食用</span>';
+        html += '<span>共吃 ' + (d.eatCount || 0) + ' 次</span>';
+      } else {
+        html += '<span>🍴 未食用过</span>';
+      }
+      html += '</div>';
+      html += '</div>';
+      return html;
+    }
+
+    function buildPendingCard(d, idx) {
+      let diffClass = 'mid';
+      if (d.difficulty === '简单') diffClass = 'easy';
+      else if (d.difficulty === '困难') diffClass = 'hard';
+
+      let html = '<div class="card pending-card">';
+      html += '<span class="pending-idx">' + idx + '</span>';
+      html += '<div class="card-name">' + escapeHtml(d.name) + '</div>';
+      html += '<div class="card-meta">';
+      if (d.category) html += '<span class="meta-tag category">' + escapeHtml(d.category) + '</span>';
+      if (d.prepTime) html += '<span class="meta-tag time">⏱ ' + d.prepTime + '分钟</span>';
+      if (d.difficulty) html += '<span class="meta-tag ' + diffClass + '">' + escapeHtml(d.difficulty) + '</span>';
+      html += '</div>';
+      if (d.tags && d.tags.length > 0) {
+        html += '<div class="tags-row">';
+        d.tags.forEach(t => { html += '<span class="tag">' + escapeHtml(t) + '</span>'; });
+        html += '</div>';
+      }
+      if (d.ingredients && d.ingredients.length > 0) {
+        html += '<div class="ingredients-row">🥬 ' + d.ingredients.map(escapeHtml).join('、') + '</div>';
+      }
+      html += '<div class="btn-group">';
+      html += '<button class="btn btn-confirm" onclick="confirmDish(' + idx + ')">✓ 确认</button>';
+      html += '<button class="btn btn-reject" onclick="rejectDish(' + idx + ')">✗ 拒绝</button>';
+      html += '</div>';
+      html += '</div>';
+      return html;
+    }
+
+    // ── 待确认操作 ──
+
+    async function confirmDish(idx) {
+      try {
+        const res = await fetch('/api/confirm?index=' + idx, { method: 'POST' });
+        const result = await res.json();
+        if (result.ok) {
+          showToast('已确认「' + result.dish.name + '」', 'success');
+          await loadData();
+        } else {
+          showToast('操作失败：' + (result.error || '未知错误'), 'error');
+        }
+      } catch (err) {
+        showToast('请求失败：' + err.message, 'error');
+      }
+    }
+
+    async function rejectDish(idx) {
+      try {
+        const res = await fetch('/api/reject?index=' + idx, { method: 'POST' });
+        const result = await res.json();
+        if (result.ok) {
+          showToast('已拒绝「' + (result.dish ? result.dish.name : '') + '」', 'success');
+          await loadData();
+        } else {
+          showToast('操作失败：' + (result.error || '未知错误'), 'error');
+        }
+      } catch (err) {
+        showToast('请求失败：' + err.message, 'error');
+      }
+    }
+
+    // ── 事件绑定 ──
+
+    searchInput.addEventListener('input', () => {
+      searchKeyword = searchInput.value.trim();
+      render();
+    });
+
+    categoryFilter.addEventListener('change', () => {
+      selectedCategory = categoryFilter.value;
+      render();
+    });
+
+    // ── 初始化 ──
+
+    loadData();
+  </script>
+</body>
+</html>

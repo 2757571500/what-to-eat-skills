@@ -1,2 +1,5 @@
 # Claude Code 相关目录
 .claude/
+
+# Qoder IDE 相关目录
+.qoder/

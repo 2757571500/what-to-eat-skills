@@ -12,18 +12,60 @@
       "name": "最终测试菜"
     },
     {
+      "category": "家常菜",
+      "tags": [
+        "快手",
+        "下饭"
+      ],
+      "ingredients": [
+        "西红柿",
+        "鸡蛋",
+        "葱"
+      ],
+      "prepTime": 15,
+      "difficulty": "简单",
+      "addedDate": "2026-07-26",
+      "lastEaten": null,
+      "eatCount": 0,
+      "name": "西红柿炒鸡蛋"
+    },
+    {
       "category": "川菜",
       "tags": [
-        "验证"
+        "麻辣",
+        "下饭"
       ],
-      "ingredients": [],
-      "prepTime": 30,
+      "ingredients": [
+        "豆腐",
+        "牛肉末",
+        "豆瓣酱",
+        "花椒"
+      ],
+      "prepTime": 20,
+      "difficulty": "中等",
+      "addedDate": "2026-07-26",
+      "lastEaten": null,
+      "eatCount": 0,
+      "name": "麻婆豆腐"
+    },
+    {
+      "category": "凉菜",
+      "tags": [
+        "快手",
+        "清淡",
+        "素食"
+      ],
+      "ingredients": [
+        "黄瓜",
+        "蒜",
+        "醋"
+      ],
+      "prepTime": 10,
       "difficulty": "简单",
-      "addedDate": "2026-07-25",
-      "lastEaten": "2026-07-25",
-      "eatCount": 1,
-      "name": "验证菜"
+      "addedDate": "2026-07-26",
+      "lastEaten": null,
+      "eatCount": 0,
+      "name": "凉拌黄瓜"
     }
-  ],
-  "pending": []
+  ]
 }

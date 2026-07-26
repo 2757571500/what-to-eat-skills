@@ -88,14 +88,7 @@ function getAllDishes() {
 
 function saveDishes(dishes) {
   const filePath = getDataAccessor().getDataPath();
-  // 保存为标准格式 { dishes: [...] }
-  const data = { dishes };
-  // 如果存在 pending 字段，保留它
-  const existing = readJSON(filePath);
-  if (existing.pending) {
-    data.pending = existing.pending;
-  }
-  writeJSON(filePath, data);
+  writeJSON(filePath, { dishes });
 }
 
 function getPending() {

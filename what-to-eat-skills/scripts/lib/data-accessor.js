@@ -124,7 +124,6 @@ class DataAccessor {
     if (!fs.existsSync(this.dataPath)) {
       const initialData = {
         dishes: [],
-        pending: [],
       };
       fs.writeFileSync(this.dataPath, JSON.stringify(initialData, null, 2));
     }

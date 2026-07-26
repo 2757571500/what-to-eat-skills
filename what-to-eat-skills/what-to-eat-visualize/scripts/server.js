@@ -24,10 +24,12 @@ const SHARED_LIB_DIR = path.resolve(__dirname, '../../scripts/lib');
 
 // 加载共享库
 const { DataAccessor } = require(path.join(SHARED_LIB_DIR, 'data-accessor.js'));
+const { confirmPending, rejectPending } = require(path.join(SHARED_LIB_DIR, 'dishes.js'));
 
 // 使用 DataAccessor 获取数据文件路径
 const dataAccessor = new DataAccessor();
 const DISHES_FILE = dataAccessor.getDataPath();
+const PENDING_FILE = dataAccessor.getPendingPath();
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -41,15 +43,78 @@ const MIME = {
 
 function resolvePath(url) {
   if (url === '/') return path.join(__dirname, 'web', 'index.html');
-  if (url.startsWith('/data/')) return DISHES_FILE;  // 直接使用全局数据文件
+  if (url.startsWith('/data/')) return '__DATA_API__';  // 特殊标记，合并 dishes + pending
   return path.join(__dirname, 'web', url.slice(1));
 }
 
-const server = http.createServer((req, res) => {
-  const filePath = resolvePath(req.url);
-  const ext = path.extname(filePath);
+function serveDataJson(res) {
+  try {
+    const dishesData = JSON.parse(fs.readFileSync(DISHES_FILE, 'utf-8'));
+    const dishes = Array.isArray(dishesData) ? dishesData : (dishesData.dishes || []);
 
-  fs.readFile(filePath, (err, data) => {
+    let pending = [];
+    if (fs.existsSync(PENDING_FILE)) {
+      const pendingData = JSON.parse(fs.readFileSync(PENDING_FILE, 'utf-8'));
+      pending = Array.isArray(pendingData) ? pendingData : (pendingData.pending || []);
+    }
+
+    const merged = { dishes, pending };
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify(merged));
+  } catch (err) {
+    res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('500 数据读取失败');
+  }
+}
+
+function handleApiRequest(req, res, url) {
+  // POST /api/confirm?index=N — 确认第 N 个待确认菜品
+  if (url.pathname === '/api/confirm' && req.method === 'POST') {
+    const index = url.searchParams.get('index');
+    if (index === null) {
+      res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ ok: false, error: '缺少 index 参数' }));
+      return true;
+    }
+    const result = confirmPending(index);
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify(result));
+    return true;
+  }
+
+  // POST /api/reject?index=N — 拒绝第 N 个待确认菜品
+  if (url.pathname === '/api/reject' && req.method === 'POST') {
+    const index = url.searchParams.get('index');
+    if (index === null) {
+      res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ ok: false, error: '缺少 index 参数' }));
+      return true;
+    }
+    const result = rejectPending(index);
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify(result));
+    return true;
+  }
+
+  return false;
+}
+
+const server = http.createServer((req, res) => {
+  const parsedUrl = new URL(req.url, `http://localhost:${PORT}`);
+
+  // 先检查 API 请求（POST /api/confirm, POST /api/reject）
+  if (handleApiRequest(req, res, parsedUrl)) return;
+
+  const resolved = resolvePath(req.url);
+
+  if (resolved === '__DATA_API__') {
+    serveDataJson(res);
+    return;
+  }
+
+  const ext = path.extname(resolved);
+
+  fs.readFile(resolved, (err, data) => {
     if (err) {
       res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
       res.end('404 未找到');
